@@ -19,6 +19,91 @@ main{margin-left:248px;min-width:0}.topbar{height:66px;position:sticky;top:0;z-i
 </style>
 </head>
 <body>
+  
+<!-- Marine Data Explorer: Live API panel -->
+<section id="live-ocean-panel" style="
+  margin: 24px 20px;
+  padding: 22px;
+  border: 1px solid #d8e3e8;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #20394a;
+  font-family: Arial, sans-serif;
+">
+  <p style="color:#168b91; font-weight:bold; letter-spacing:2px;">
+    LIVE API CONNECTION
+  </p>
+
+  <h2 style="margin-bottom:8px;">
+    Sea Surface Temperature
+  </h2>
+
+  <p id="ocean-status" style="color:#718795;">
+    Connecting to ocean data...
+  </p>
+
+  <div id="ocean-temperature"
+       style="font-size:38px;font-weight:bold;margin:18px 0;">
+    -- °C
+  </div>
+
+  <p id="ocean-location" style="color:#718795;">
+    Gulf of Mexico model grid
+  </p>
+
+  <p id="ocean-time" style="font-size:13px;color:#718795;"></p>
+
+  <p style="font-size:12px;color:#718795;">
+    Model-based estimate, not a live sensor reading.
+    Source: Open-Meteo Marine API.
+  </p>
+</section>
+
+<script>
+async function loadOceanTemperature() {
+  const status = document.getElementById("ocean-status");
+  const temperature = document.getElementById("ocean-temperature");
+  const timeLabel = document.getElementById("ocean-time");
+
+  const apiUrl =
+    "https://marine-api.open-meteo.com/v1/marine" +
+    "?latitude=27.5&longitude=-90.5" +
+    "&current=sea_surface_temperature" +
+    "&timezone=UTC&cell_selection=sea";
+
+  try {
+    status.textContent = "Fetching marine data...";
+
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      throw new Error("API request failed: " + response.status);
+    }
+
+    const data = await response.json();
+    const current = data.current;
+    const value = current?.sea_surface_temperature;
+
+    if (value == null || !Number.isFinite(value)) {
+      throw new Error("Temperature data is unavailable.");
+    }
+
+    temperature.textContent = value.toFixed(1) + " °C";
+    status.textContent = "API connected successfully";
+    timeLabel.textContent =
+      "Model timestamp (UTC): " + current.time;
+
+  } catch (error) {
+    status.textContent =
+      "Ocean data unavailable. Please try again later.";
+    temperature.textContent = "-- °C";
+    console.error("Marine API error:", error);
+  }
+}
+
+loadOceanTemperature();
+</script>
+
 <div class="app">
 <aside class="sidebar" id="sidebar">
   <div class="brand"><div class="brand-mark"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8c3.5-3 6.5-3 10 0s6.5 3 8 0M3 13c3.5-3 6.5-3 10 0s6.5 3 8 0M3 18c3.5-3 6.5-3 10 0s6.5 3 8 0"/></svg></div><div><strong>PELAGIA</strong><small>MARINE INTELLIGENCE</small></div><button class="close-sidebar" id="closeSidebar" aria-label="Close menu">✕</button></div>
